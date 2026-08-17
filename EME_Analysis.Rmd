@@ -1,0 +1,337 @@
+---
+title: "Economic Multiplier Effect of Kota Kinabalu Countdown (KKCD) 2025"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include = F}
+library(flexdashboard)
+library(ggplot2)
+library(tidyverse)
+library(DT)
+library(plotly)
+knitr::opts_chunk$set(echo = F, warning = F)
+```
+
+
+
+```{r, include = F, cache = T, echo = F}
+cost <- read.csv("Total_Cost.csv", header = T, encoding = "UTF-8")
+
+direct_revenue <- read.csv("Direct_Revenue.csv", header = T, encoding = "UTF-8")
+
+attendance <- read.csv("Attendance.csv", header = T, encoding = "UTF-8")
+```
+
+
+
+Overview{data-icon="fa-globe"}
+===========================================================
+
+Row
+-----------------------------------------------------------
+```{r picture, echo = F, out.width = "121%", out.height = "465px"}
+knitr::include_graphics("kkcd_poster.png")
+```
+
+
+Row
+-----------------------------------------------------------
+
+### Total Cost
+
+```{r}
+total_cost <- sum(cost$Cost..RM.)
+
+if(total_cost %% 1 == 0){
+  format_value <- paste0("RM ", formatC(total_cost, format = "f", digits = 2, big.mark = ","))
+} else{
+  format_value <- paste0("RM ", formatC(round(total_cost, 2), format = "f", digits = 2, big.mark = ","))
+}
+
+valueBox(value = format_value, icon = "ion-pricetags", caption = "Total Cost", color = "#4a7ba6")
+```
+
+
+### Total Direct Revenue
+
+```{r}
+total_direct_revenue <- sum(direct_revenue$Revenue..RM.)
+
+if(total_direct_revenue %% 1 == 0){
+  format_value <- paste0("RM ", formatC(total_direct_revenue, format = "f", digits = 2, big.mark = ","))
+} else{
+  format_value <- paste0("RM ", formatC(round(total_direct_revenue, 2), format = "f", digits = 2, big.mark = ","))
+}
+
+valueBox(value = format_value, icon = "ion-ios-list", 
+         caption = "Total Direct Revenue", color = "#f9e1e0")
+```
+
+
+### Total Indirect Revenue
+
+```{r}
+domestic_regions <- c("Sabah", "Sarawak", "Peninsular Malaysia", "Labuan")
+
+domestic_attendance <- attendance[attendance$Origin %in% domestic_regions,]
+international_attendance <- attendance[!attendance$Origin %in% domestic_regions,]
+
+avg_domestic_spending_2023 <- 417
+avg_international_spending_2024 <- 4086.60
+
+total_domestic <- sum(domestic_attendance$Estimated.Attendance)
+total_international <- sum(international_attendance$Estimated.Attendance)
+
+indirect_revenue_domestic <- total_domestic * avg_domestic_spending_2023
+indirect_revenue_international <- total_international * avg_international_spending_2024
+
+total_indirect_revenue <- indirect_revenue_domestic + indirect_revenue_international
+
+if(total_indirect_revenue %% 1 == 0){
+  format_value <- paste0("RM ", formatC(total_indirect_revenue, format = "f", digits = 2, big.mark = ","))
+} else{
+  format_value <- paste0("RM ", formatC(round(total_indirect_revenue, 2), format = "f", digits = 2, big.mark = ","))
+}
+
+valueBox(value = format_value, icon = "ion-android-cart",
+         caption = "Total Indirect Revenue", color = "#9799ba")
+```
+
+Row
+-----------------------------------------------------------
+
+### Total Revenue
+
+```{r}
+total_revenue <- total_direct_revenue + total_indirect_revenue
+
+if(total_revenue %% 1 == 0){
+  format_value <- paste0("RM ", formatC(total_revenue, format = "f", digits = 2, big.mark = ","))
+} else{
+  format_value <- paste0("RM ", formatC(round(total_revenue, 2), format = "f", digits = 2, big.mark = ","))
+}
+
+valueBox(value = format_value, icon = "ion-pie-graph", caption = "Total Revenue", color = "#bc85a3")
+```
+
+
+### Economic Multiplier Effect
+
+```{r}
+Economic_Impact_Multiplier <- total_revenue / total_cost
+
+valueBox(value = paste0(round(Economic_Impact_Multiplier, 2), "x"), icon = "ion-stats-bars", caption = "Economic Multiplier Effect", color = "#feadb9")
+```
+
+
+Total Cost{data-icon="ion-pricetags"}
+===========================================================
+
+### Table 1
+
+```{r, cache = T, echo = F}
+cost_df <- cost
+
+cost_df$Cost..RM. <- formatC(cost_df$Cost..RM., format = "f", digits = 2)
+
+datatable(setNames(cost_df, c("Category", "Cost (RM)")), rownames = F, options = list(dom = 'tr'))
+```
+
+### Visualisation
+
+```{r, cache = T, echo = F}
+cost <- cost %>%
+  mutate(
+    Percentage = Cost..RM. / sum(Cost..RM.) * 100,
+    Label = paste0(round(Percentage, 1), "%")
+  )
+
+pie1 <- ggplot(cost, aes(x = " ", y = Cost..RM., fill = Category)) + 
+  geom_bar(stat = "identity", width = 1) + 
+  scale_fill_brewer(palette = "Pastel1") +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = Label), position = position_stack(vjust = 0.5), size = 4) +
+  theme_void() +
+  labs(title = "Cost Distribution by Category") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+print(pie1)
+```
+
+
+Total Direct Revenue{data-icon="ion-ios-list"}
+===========================================================
+
+### Table 2
+
+```{r, cache = T, echo = F}
+datatable(setNames(direct_revenue, c("Source", "Revenue (RM)")), rownames = F, options = list(dom = 'tr'))
+```
+
+### Visualisation
+
+```{r, cache = T, echo = F}
+plot_ly(direct_revenue) %>% 
+  add_bars(
+    x = ~Source, 
+    y = ~Revenue..RM., 
+    text = ~paste0("Revenue: RM ", format(Revenue..RM., big.mark = ",")),
+    hoverinfo = "text",
+    textposition = "none",
+    marker = list(color = c("#005f73", "#0a9396", "#94d2bd"))
+    ) %>% 
+  layout(
+    title = "Revenue Distribution",
+    xaxis = list(title = "Sources", showgrid = F, showline = F),
+    yaxis = list(title = "", showgrid = F, showticklabels = F),
+    showlegend = F
+  )
+
+
+
+# making the bar chart cannot run
+method_2 <- function() {# bar1 <- 
+  ggplot(data = direct_revenue, aes(x = Source, y = Revenue..RM.)) +
+  geom_bar(stat = "identity", fill = c("#005f73", "#0a9396", "#94d2bd")) +
+  labs(title = "Revenue Distribution", x = "Sources", y = "Revenue (RM)") +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.text.y = element_blank(),          
+    axis.ticks.y = element_blank(),         
+    axis.title.y = element_blank(),
+    plot.title = element_text(hjust = 0.5))
+}
+
+# remove the # at ggplotly if want to use method 2
+# ggplotly(bar1, tooltip = c("y", "x"))
+  
+```
+
+Total Indirect Revenue{data-icon="ion-android-cart"}
+===========================================================
+
+Row
+-----------------------------------------------------------
+
+### Domestic Tourists
+```{r, cache = T, echo = F}
+valueBox(value = format(total_domestic, big.mark = ","), icon = "ion-ios-people", 
+         caption = "Total Number of Domestic Attendees", color = "#dba59a")
+```
+
+### Domestic Spending
+```{r, cache = T, echo = F}
+valueBox(value = paste0("RM", formatC(avg_domestic_spending_2023, format = "f", digits = 2, big.mark = ",")), icon = "ion-ios-cart", 
+         caption = "Average Spending of Domestic Tourists", color = "#dba59a")
+```
+
+### International Tourists
+```{r, cache = T, echo = F}
+valueBox(value = format(total_international, big.mark = ","), icon = "ion-ios-people-outline", 
+         caption = "Total Number of International Attendees", color = "#849ad3")
+```
+
+### International Spending
+```{r, cache = T, echo = F}
+valueBox(value = paste0("RM", formatC(avg_international_spending_2024, format = "f", digits = 2, big.mark = ",")), 
+         icon = "ion-ios-cart-outline", 
+         caption = "Average Spending of International Tourists", color = "#849ad3")
+```
+
+Row
+-----------------------------------------------------------
+
+### Domestic Spending
+```{r, cache = T, echo = F}
+valueBox(value = paste0("RM", formatC(indirect_revenue_domestic, format = "f", digits = 2, big.mark = ",")), icon = "ion-ios-pie", 
+         caption = "Total Indirect Revenue of Domestic Tourists", color = "#dba59a")
+```
+
+### International Spending
+```{r, cache = T, echo = F}
+valueBox(value = paste0("RM", formatC(indirect_revenue_international, format = "f", digits = 2, big.mark = ",")), 
+         icon = "ion-ios-pie-outline", 
+         caption = "Total Indirect Revenue of International Tourists", color = "#849ad3")
+```
+
+
+Row
+-----------------------------------------------------------
+
+### Table 3
+```{r, cache = T, echo = F}
+domestic_row <- data.frame(Origin = "Malaysia", Estimated.Attendance = total_domestic)
+total_attendance_df <- rbind(domestic_row, international_attendance)
+
+datatable(setNames(total_attendance_df, c("Origin", "Estimated Attendance")), rownames = F)
+```
+
+### Visualisation
+```{r, cache = T, echo = F}
+bar2 <- ggplot(data = international_attendance) + 
+  geom_col(aes(x = Estimated.Attendance, y = reorder(Origin, Estimated.Attendance), fill = Origin)) + 
+  scale_fill_brewer(palette = "Set3") + 
+  labs(title = "International Tourists Distribution", x = "Origin", y = "Estimated Attendance") +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(), 
+    plot.title = element_text(hjust = 0.5), 
+    legend.position = "none")  
+print(bar2)
+```
+
+
+Economic Multiplier Effect{data-icon="ion-stats-bars"}
+===========================================================
+
+
+### Visualisation
+```{r, cache = T, echo = F}
+Economic_Impact_Multiplier_df <- data.frame(
+  Category = c("Total Revenue", "Total Cost"),
+  Amount = c(total_revenue, total_cost)
+)
+
+
+Economic_Impact_Multiplier_df <- Economic_Impact_Multiplier_df %>% mutate(
+  Fraction = Amount / sum(Amount),
+  ymax = cumsum(Fraction),
+  ymin = lag(ymax, default = 0),
+  LabelPosition = (ymax + ymin) / 2
+)
+
+
+pie2 <- ggplot(data = Economic_Impact_Multiplier_df, aes(ymax = ymax, ymin = ymin, xmax = 2.5, xmin = 1.5, fill = Category)) +
+  geom_rect(color = "white") +
+  coord_polar(theta = "y") +
+  xlim(c(-1, 4)) +
+  labs(title = "Total Revenue VS Total Cost", subtitle = paste0("Economic Impact Multiplier = ", round(Economic_Impact_Multiplier, 2), "x")) +
+  geom_text(x = 0.3, aes(y = LabelPosition, label = Economic_Impact_Multiplier, color = Category)) +
+  scale_fill_manual(values = c("Total Revenue" = "#849561", "Total Cost" = "#b78d6a")) +
+  scale_color_manual(values = c("Total Revenue" = "#849561", "Total Cost" = "#b78d6a")) +
+  theme_void() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    legend.position = "none")
+
+print(pie2)
+```
+
+
+### Limitations
+- The average international spending is based on national data and may overestimate actual behaviour in Sabah.
+- Average Occupancy Rate (AOR) and Average Room Rate (ARR) were not included in Economic Impact Multiplier due to insufficient guest data.
+- The attendance numbers are based on surveys, not ticket scans.
+
