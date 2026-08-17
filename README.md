@@ -42,4 +42,4 @@ The analysis quantifies the event's **economic multiplier effect** on Sabah's to
 
 ---
 ## Dashboard Snapshot
-!![image alt](https://github.com/enniegoh/KKCD_2025_Economic_Impact_Analysis/blob/bed11521f473cfc15acc64b3bb2bc9d7604e1e09/Merged%20Dashboard.png)
+![image alt](https://github.com/enniegoh/KKCD_2025_Economic_Impact_Analysis/blob/bed11521f473cfc15acc64b3bb2bc9d7604e1e09/Merged%20Dashboard.png)
