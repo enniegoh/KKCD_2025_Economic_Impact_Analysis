@@ -33,9 +33,13 @@ The analysis quantifies the event's **economic multiplier effect** on Sabah's to
 - **R / Flexdashboard** 
 - **Power BI** 
 
---
+---
 
 ## Limitations
 - Tourist spending used **state/national averages** due to lack of individual-level data
 - Hotel accommodation revenue **excluded** due to incomplete data
 - Attendance figures are **survey-based estimates**
+
+---
+## Dashboard Snapshot
+!![image alt](https://github.com/enniegoh/KKCD_2025_Economic_Impact_Analysis/blob/bed11521f473cfc15acc64b3bb2bc9d7604e1e09/Merged%20Dashboard.png)
